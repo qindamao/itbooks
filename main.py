@@ -1,10 +1,11 @@
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue,Pool
 import os, time, random
 import logging
 import logging.config
 import cloghandler
 from logging.handlers import TimedRotatingFileHandler
 from functools import reduce
+from dbs.dbdouban import dbdouban
 from crawler.crdouban import crdouban
 from tools.config import LOG_PATH,CLASSIFICATION
 # 写数据进程执行的代码:
@@ -100,7 +101,9 @@ def scawldetailpage(q):
 
 def getkeylist(x,y):
     return x + y
-if __name__=='__main__':
+
+#跑不通
+def main1():
     searchkeys = reduce(getkeylist,[x for x in CLASSIFICATION.values()])
     init()
     q = Queue()
@@ -114,3 +117,29 @@ if __name__=='__main__':
     dp.join()
     #logging.info('主进程停止...')
     print('主进程停止...')
+
+#仅仅爬豆瓣列表页
+def onlydoubanlist(searchkey,start):
+    q = Queue()
+    douban = crdouban(q, searchkey,start)
+    douban.startcrawl()
+
+def onlydoubandetail():
+    db = dbdouban()
+    count = db.count_no_detail()
+    size = 10
+    p = Pool(4)
+    for i in range(0,count//size + 1):
+        p.apply_async(doprocessdetail,args=(i,size))
+    p.close()
+    p.join()
+def doprocessdetail(page,size):
+    db = dbdouban()
+    q = Queue()
+    for subcode in db.get_no_details(page * size, size):
+        douban = crdouban(q)
+        douban.crawldetail(subcode)
+if __name__=='__main__':
+    #main1()
+    #onlydoubanlist('C语言',1275)
+    onlydoubandetail()

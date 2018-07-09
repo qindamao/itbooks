@@ -23,19 +23,20 @@ from dbs.dbdouban import dbdouban
 
 #logger = logging.getLogger('crdouban')
 class crdouban:
-    def __init__(self,q,searchkey = ''):
+    def __init__(self,q,searchkey = '',start = 0):
         self.__searchkey = searchkey
+        self.__start = start
         self.__getstartpage()
         self.__q = q
     def __getstartpage(self):
         '''
         构造分类爬虫起始页路径
         '''
-        self.__starturl = tools.config.DOUBAN_SEARCH_URL.format(searchkey = self.__searchkey)
+        self.__starturl = tools.config.DOUBAN_SEARCH_URL.format(searchkey = self.__searchkey,start = self.__start)
     def startcrawl(self):
         self.__driver = webdriver.Chrome('chromedriver.exe')
-        #self.__driver.get(self.__starturl)
-        self.__driver.get('https://book.douban.com/subject_search?search_text=C%E8%AF%AD%E8%A8%80&cat=1001')
+        self.__driver.get(self.__starturl)
+        #self.__driver.get('https://book.douban.com/subject_search?search_text=C%E8%AF%AD%E8%A8%80&cat=1001')
         self.__crawlpage()
     def __crawlpage(self):
         '''
@@ -43,7 +44,12 @@ class crdouban:
         '''
         try:
             #logging.info(logging.info('正在爬取的列表页地址{0}'.format(self.__driver.current_url)))
+            currenturl = self.__driver.current_url
             print('正在爬取的列表页地址{0}'.format(self.__driver.current_url))
+            #页面遇到反爬问题，停止递归。
+            if self.hasProblem(currenturl):
+                self.__driver.quit()
+                return
             csspager = WebDriverWait(self.__driver, 5).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, '.paginator'))
                 )
@@ -152,7 +158,10 @@ class crdouban:
         t1.join()
         #db.update_douban_detail(subcode,author,pages,ISBN,price,intro,catalog,publishyear,tags,datetime.now().strftime('%Y-%m-%d'))
         #print('title:%s,author:%s,pages:%s,ISBN:%s,price:%s,publishyear:%s,tags:%s'%(title,author,pages,ISBN,price,publishyear,tags))
-
+    def hasProblem(self,url):
+        if 'sec.douban.com' in url:
+            return True
+        return False
 if __name__ == '__main__':
     q = Queue()
     douban = crdouban(q)
