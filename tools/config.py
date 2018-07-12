@@ -3,7 +3,7 @@
 
 
 #各类url
-DOUBAN_SEARCH_URL = 'https://book.douban.com/subject_search?search_text={searchkey}&cat=1001'
+DOUBAN_SEARCH_URL = 'https://book.douban.com/subject_search?search_text={searchkey}&cat=1001&start={start}'
 DOUBAN_DETAIL_URL = 'https://book.douban.com/subject/{subjectcode}/'
 BAIDU_URL = 'https://www.baidu.com/s'
 #图书资源分类-关键字

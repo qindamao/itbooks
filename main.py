@@ -128,7 +128,7 @@ def onlydoubandetail():
     db = dbdouban()
     count = db.count_no_detail()
     size = 10
-    p = Pool(4)
+    p = Pool(8)
     for i in range(0,count//size + 1):
         p.apply_async(doprocessdetail,args=(i,size))
     p.close()
@@ -139,7 +139,8 @@ def doprocessdetail(page,size):
     for subcode in db.get_no_details(page * size, size):
         douban = crdouban(q)
         douban.crawldetail(subcode)
+        time.sleep(1)
 if __name__=='__main__':
     #main1()
-    #onlydoubanlist('C语言',1275)
+    #onlydoubanlist('HTML5',0)
     onlydoubandetail()

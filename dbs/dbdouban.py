@@ -39,7 +39,7 @@ class dbdouban:
 
     def update_douban_detail(self,subjectcode,author,pages,ISBN,price,introduction,catalog,publishyear,tags,lastupdate):
         db = dbbase()
-        sql = '''update itbooks 
+        sql = '''update itbooks_star 
                 set author=%s,pages=%s,ISBN=%s,price=%s,
                 introduction=%s,catalog=%s,publishyear=%s,tags=%s
                 ,lastupdate =%s where subjectcode = %s'''
@@ -56,8 +56,8 @@ class dbdouban:
             db.close()
     def get_no_details(self,start,size):
         db = dbbase()
-        sql = '''select subjectcode from itbooks where ISBN = '' and pages = '' and author = ''
-                and price = '' order by id LIMIT %s ,%s'''
+        sql = '''select subjectcode from itbooks_star where ISBN = '' and pages = '' and author = ''
+                and price = ''  order by id LIMIT %s ,%s'''
         try:
             db.openconnection()
             cursor = db.opencursor()[0]
@@ -73,12 +73,41 @@ class dbdouban:
             db.close()
     def count_no_detail(self):
         db = dbbase()
-        sql = '''select count(*) from itbooks where ISBN = '' and pages = '' and author = '' and price = '' '''
+        sql = '''select count(*) from itbooks_star where ISBN = '' and pages = '' and author = '' and price = '' '''
         try:
             db.openconnection()
             cursor = db.opencursor()[0]
             cursor.execute(sql)
             return cursor.fetchone()[0]
+        except mysql.connector.Error as err:
+            #logger.exception('update_douban_detail:{0}'.format(err))
+            print('get_no_details:{0}'.format(err))
+        finally:
+            db.close()
+    def setcsdninfo(self,subjectcode,csdnurl,score):
+        db = dbbase()
+        sql = '''update itbooks_star set csdnurl=%s,score=%s,csdnsearhced= 1 where subjectcode = %s'''
+        try:
+            db.openconnection()
+            cursor = db.opencursor()[0]
+            cursor.execute(sql,(csdnurl,score,subjectcode))
+            db.cnx.commit()
+        except mysql.connector.Error as err:
+            #logger.exception('update_douban_detail:{0}'.format(err))
+            print('update_douban_detail:{0}'.format(err))
+        finally:
+            db.close()
+    def get_csdn_no_searched(self):
+        db = dbbase()
+        sql = '''select subjectcode,bookname from itbooks_star where csdnsearhced = 0'''
+        try:
+            db.openconnection()
+            cursor = db.opencursor()[0]
+            cursor.execute(sql)
+            items = cursor.fetchall()
+            if len(items) > 0:
+                return  [item[0] for item in items]
+            return None
         except mysql.connector.Error as err:
             #logger.exception('update_douban_detail:{0}'.format(err))
             print('get_no_details:{0}'.format(err))
