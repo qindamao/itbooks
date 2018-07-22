@@ -6,7 +6,9 @@ import cloghandler
 from logging.handlers import TimedRotatingFileHandler
 from functools import reduce
 from dbs.dbdouban import dbdouban
+from dbs.dbbaidu import dbbaidu
 from crawler.crdouban import crdouban
+from crawler.crbaidu import crbaidu
 from tools.config import LOG_PATH,CLASSIFICATION
 # 写数据进程执行的代码:
 
@@ -125,6 +127,10 @@ def onlydoubanlist(searchkey,start):
     douban.startcrawl()
 
 def onlydoubandetail():
+    '''
+    多进程爬豆瓣明细
+    :return:
+    '''
     db = dbdouban()
     count = db.count_no_detail()
     size = 10
@@ -134,13 +140,37 @@ def onlydoubandetail():
     p.close()
     p.join()
 def doprocessdetail(page,size):
+    '''
+    爬豆瓣明细
+    :param page:
+    :param size:
+    :return:
+    '''
     db = dbdouban()
     q = Queue()
     for subcode in db.get_no_details(page * size, size):
         douban = crdouban(q)
         douban.crawldetail(subcode)
         time.sleep(1)
+
+def crawlebaiducsdn(subcdoe,bookname):
+    print('crawel{0},{1}...'.format(subcdoe,bookname))
+    db = dbbaidu()
+    crawl = crbaidu()
+    csdndata = crawl.baidusearch(subcdoe,bookname)
+    if csdndata:
+        db.update_csdn_info(csdndata[0],csdndata[1],csdndata[2])
+def onlybaiducsdn():
+    db = dbbaidu()
+    datas = db.get_nocsdn_bookname()
+    p = Pool(4)
+    for data in datas:
+        p.apply_async(crawlebaiducsdn,args=(data[1],data[0]))
+        #crawlebaiducsdn(data[1],data[0])
+    p.close()
+    p.join()
 if __name__=='__main__':
     #main1()
     #onlydoubanlist('HTML5',0)
-    onlydoubandetail()
+    #onlydoubandetail()
+    onlybaiducsdn()
