@@ -40,9 +40,9 @@ CLASSIFICATION = {
 }
 #数据库配置
 dbconfig = {
-  'user': 'qindamao',
-  'password': 'qin_XIA_2018',
-  'host': '193.112.12.252',
+  'user': '',
+  'password': '',
+  'host': '',
   'database': 'vxzy',
   'raise_on_warnings': True,
 }
